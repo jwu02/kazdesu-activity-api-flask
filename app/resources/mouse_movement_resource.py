@@ -1,9 +1,8 @@
 from flask_restful import Resource
 from flask import request
 
-from app.db import db
+from app.db import get_db
 from app.auth import token_required
-from app.models import MouseMovement
 
 class MouseMovementResource(Resource):
     @token_required
@@ -13,20 +12,25 @@ class MouseMovementResource(Resource):
         created_at = data.get('createdAt')
 
         try:
-            mouse_movement = MouseMovement(amount=amount, created_at=created_at)
-            db.session.add(mouse_movement)
-            db.session.commit()
+            db = get_db()
+            db.mouse_movements.insert_one({
+                'amount': amount,
+                'createdAt': created_at
+            })
             return {"message": "Mouse movement data inserted successfully"}, 201
         except Exception as e:
-            db.session.rollback()
             return {"message": f"Error inserting data: {str(e)}"}, 500
 
     def get(self):
-        mouse_movements = MouseMovement.query.all()
-        result = [
-            {
-                'id': mm.id,
-                'amount': mm.amount, 
-                'createdAt': mm.created_at.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
-            } for mm in mouse_movements]
-        return {'data': result}, 200
+        try:
+            db = get_db()
+            mouse_movements = db.mouse_movements.find()
+            result = [
+                {
+                    'id': str(mm['_id']),
+                    'amount': mm['amount'], 
+                    'createdAt': mm['createdAt']
+                } for mm in mouse_movements]
+            return {'data': result}, 200
+        except Exception as e:
+            return {"message": f"Error retrieving data: {str(e)}"}, 500
