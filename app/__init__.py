@@ -1,9 +1,17 @@
-from flask import Flask
+from flask import Flask, render_template, redirect, url_for
 from flask_restful import Api
 
 from app.config import Config
 from app.db import init_db
 from app.resources import PingResource, KeyPressResource, LeftClickResource, RightClickResource, MouseMovementResource
+
+route_to_resource_mapping = {
+    '/api/v1/ping': PingResource,
+    '/api/v1/activity/key-presses': KeyPressResource,
+    '/api/v1/activity/left-clicks': LeftClickResource,
+    '/api/v1/activity/right-clicks': RightClickResource,
+    '/api/v1/activity/mouse-movements': MouseMovementResource
+}
 
 def create_app():
     app = Flask(__name__)
@@ -13,11 +21,20 @@ def create_app():
 
     api = Api(app)
 
+    @app.route('/')
+    def index():
+        return render_template('index.html', valid_endpoints=list(route_to_resource_mapping.keys()))
+    
+    # Error handler for 404
+    @app.errorhandler(404)
+    def page_not_found(e):
+        """
+        Redirect all invalid route requests to index page
+        """
+        return redirect(url_for('index'))
+
     # Add resources to API
-    api.add_resource(PingResource, '/api/v1/ping')
-    api.add_resource(KeyPressResource, '/api/v1/key-presses')
-    api.add_resource(LeftClickResource, '/api/v1/left-clicks')
-    api.add_resource(RightClickResource, '/api/v1/right-clicks')
-    api.add_resource(MouseMovementResource, '/api/v1/mouse-movements')
+    for route, resource in route_to_resource_mapping.items():
+        api.add_resource(resource, route)
 
     return app
