@@ -25,7 +25,7 @@ class KeyPressResource(Resource):
         except Exception as e:
             return {"message": f"Error inserting data: {str(e)}"}, 500
 
-    def get(self):
+    def get_data(self):
         try:
             db = get_db()
             key_presses = db.key_presses.find()
@@ -36,6 +36,15 @@ class KeyPressResource(Resource):
                     'createdAt': kp['createdAt']
                 } for kp in key_presses
             ]
-            return {'data': result}, 200
+            return result
         except Exception as e:
-            return {"message": f"Error retrieving data: {str(e)}"}, 500
+            return {"message": f"Error retrieving data: {str(e)}"}
+    
+    def get(self):
+        statusCode = 200
+        try:
+            result = self.get_data()
+        except Exception as e:
+            statusCode = 500
+        finally:
+            return result, statusCode

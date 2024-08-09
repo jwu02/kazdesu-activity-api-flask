@@ -3,3 +3,4 @@ from .key_press_resource import KeyPressResource
 from .left_click_resource import LeftClickResource
 from .right_click_resource import RightClickResource
 from .mouse_movement_resource import MouseMovementResource
+from .all_activity_resource import AllActivityResource

@@ -21,7 +21,7 @@ class RightClickResource(Resource):
         except Exception as e:
             return {"data": f"Error inserting data: {str(e)}"}, 500
 
-    def get(self):
+    def get_data(self):
         try:
             db = get_db()
             right_clicks = db.right_clicks.find()
@@ -31,6 +31,15 @@ class RightClickResource(Resource):
                     'count': rc['count'], 
                     'createdAt': rc['createdAt']
                 } for rc in right_clicks]
-            return {'data': result}, 200
+            return result
         except Exception as e:
-            return {"message": f"Error retrieving data: {str(e)}"}, 500
+            return {"message": f"Error retrieving data: {str(e)}"}
+    
+    def get(self):
+        statusCode = 200
+        try:
+            result = self.get_data()
+        except Exception as e:
+            statusCode = 500
+        finally:
+            return result, statusCode
